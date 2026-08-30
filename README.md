@@ -95,7 +95,7 @@ Toute la logique de calcul est testée (portions, conversions, fusion des
 listes, estimation des prix, magasin de données) :
 
 ```bash
-npm test    # 82 tests, node --test, aucune dépendance
+npm test    # 86 tests, node --test, aucune dépendance
 ```
 
 ## Format d'import (celui qu'on apprend à Claude)
@@ -154,11 +154,27 @@ et ajoute seulement ce qui manque.
 
 ## Publier une nouvelle version
 
-Le numéro de version vit dans `lib/version.js`. Le changer suffit : il
-s'affiche à côté du titre, **et** il nomme le cache hors-ligne, donc les
-téléphones récupèrent la nouvelle version au lieu de servir l'ancienne. Quand
-le nouveau service worker prend la main, la page se recharge une fois toute
-seule pour éviter de mélanger deux versions du code.
+Le numéro de version doit être changé **à deux endroits, identiques** :
+
+- `lib/version.js` → `APP_VERSION` (ce qui s'affiche à côté du titre)
+- `sw.js` → `const VERSION` (ce qui nomme le cache hors-ligne)
+
+`npm test` échoue si les deux divergent, et si un module de `lib/` manque
+dans la liste `ASSETS` du service worker.
+
+Ce n'est pas de la coquetterie : un navigateur ne repère une nouvelle version
+de service worker qu'en comparant les **octets** de `sw.js`. Si ce fichier ne
+change pas, aucune mise à jour n'est installée — et comme les fichiers de
+l'appli sont servis depuis le cache, le téléphone reste bloqué sur l'ancienne
+version indéfiniment. C'est exactement ce qui s'est produit entre les
+versions 0.04 et 0.05.
+
+Une fois `sw.js` modifié, le déroulé est automatique : le navigateur installe
+le nouveau service worker, celui-ci remplit un cache neuf (en court-circuitant
+le cache HTTP), prend la main, et la page se recharge une fois toute seule.
+
+Sur iPhone, si la mise à jour tarde, fermer complètement l'appli (la balayer
+depuis le sélecteur d'applications) puis la rouvrir force la vérification.
 
 ## Pistes d'amélioration
 

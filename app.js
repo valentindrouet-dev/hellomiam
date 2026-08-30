@@ -2053,8 +2053,20 @@ async function boot() {
   startTimerTicker()
 
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    // La version dans l'URL renouvelle le cache à chaque publication.
-    navigator.serviceWorker.register(`sw.js?v=${APP_VERSION}`).catch(() => {})
+    // `updateViaCache: 'none'` force le navigateur à aller chercher sw.js sur
+    // le réseau pour vérifier les mises à jour, au lieu de le relire dans son
+    // cache HTTP (GitHub Pages le sert avec une durée de vie de 10 minutes).
+    navigator.serviceWorker.register(`sw.js?v=${APP_VERSION}`, { updateViaCache: 'none' })
+      .then(reg => {
+        // Une appli ajoutée à l'écran d'accueil peut rester ouverte des
+        // jours : on redemande une vérification à chaque retour dessus.
+        const check = () => {
+          if (document.visibilityState === 'visible') reg.update().catch(() => {})
+        }
+        document.addEventListener('visibilitychange', check)
+        check()
+      })
+      .catch(() => {})
 
     // Quand une nouvelle version prend la main, on recharge une fois. Sans
     // ça, la page garderait les modules déjà chargés depuis l'ancien cache

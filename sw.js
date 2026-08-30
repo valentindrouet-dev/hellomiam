@@ -2,9 +2,15 @@
 // Tous les chemins sont relatifs pour marcher sous GitHub Pages, où le site
 // est servi depuis un sous-dossier (/hellomiam/).
 
-// Le nom du cache suit la version passée à l'enregistrement (sw.js?v=0.04) :
-// publier une nouvelle version suffit à renouveler le cache des téléphones.
-const VERSION = new URL(self.location.href).searchParams.get('v') || 'dev'
+// La version est écrite ICI, en dur, et doit rester identique à celle de
+// lib/version.js (un test le vérifie).
+//
+// C'est volontaire et load-bearing : le navigateur ne repère une nouvelle
+// version de service worker qu'en comparant les OCTETS de ce fichier. Tant
+// que sw.js ne change pas, aucune mise à jour n'est installée — et comme les
+// fichiers de l'appli sont servis depuis le cache, le téléphone reste bloqué
+// sur l'ancienne version pour toujours. Changer ce nombre débloque tout.
+const VERSION = '0.06'
 const CACHE = `hellomiam-${VERSION}`
 const IMG_CACHE = `hellomiam-img-${VERSION}`
 const ASSETS = [
@@ -13,6 +19,7 @@ const ASSETS = [
   './styles.css',
   './app.js',
   './manifest.webmanifest',
+  './lib/version.js',
   './lib/constants.js',
   './lib/normalize.js',
   './lib/units.js',
@@ -33,7 +40,11 @@ const ASSETS = [
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS)).catch(() => {})
+    caches.open(CACHE).then(cache =>
+      // `cache: 'reload'` court-circuite le cache HTTP du navigateur : sans
+      // ça, on remplirait le cache neuf avec les anciens fichiers.
+      cache.addAll(ASSETS.map(url => new Request(url, { cache: 'reload' })))
+    ).catch(() => {})
   )
   self.skipWaiting()
 })
