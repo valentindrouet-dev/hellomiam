@@ -1,0 +1,20 @@
+{
+  "name": "hellomiam",
+  "private": true,
+  "version": "1.0.0",
+  "description": "HelloMiam — la bible familiale des recettes, avec courses intelligentes",
+  "type": "module",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "npm run build -w client",
+    "start": "npm run start -w server",
+    "test": "node --test client/src/lib/*.test.js server/test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

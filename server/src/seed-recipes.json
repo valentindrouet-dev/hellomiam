@@ -1,0 +1,116 @@
+[
+  {
+    "title": "Poulet crémeux au paprika, riz aux poivrons",
+    "category": "hellofresh",
+    "servings": 2,
+    "prepMin": 15,
+    "cookMin": 25,
+    "notes": "Fiche HelloFresh — exemple fourni avec l'appli",
+    "ingredients": [
+      { "name": "Filet de poulet", "qty": 300, "unit": "g", "dept": "boucherie" },
+      { "name": "Riz", "qty": 150, "unit": "g", "dept": "epicerie" },
+      { "name": "Poivron rouge", "qty": 1, "unit": "pièce", "dept": "fruits-legumes" },
+      { "name": "Oignon", "qty": 1, "unit": "pièce", "dept": "fruits-legumes" },
+      { "name": "Ail", "qty": 1, "unit": "gousse", "dept": "fruits-legumes" },
+      { "name": "Crème fraîche", "qty": 10, "unit": "cl", "dept": "cremerie" },
+      { "name": "Concentré de tomates", "qty": 2, "unit": "c. à soupe", "dept": "epicerie" },
+      { "name": "Paprika", "qty": 1, "unit": "c. à café", "dept": "epicerie" },
+      { "name": "Bouillon de volaille", "qty": 1, "unit": "cube", "dept": "epicerie" },
+      { "name": "Huile d'olive", "qty": 1, "unit": "c. à soupe", "dept": "epicerie" },
+      { "name": "Sel", "qty": null, "unit": null, "dept": "epicerie" },
+      { "name": "Poivre", "qty": null, "unit": null, "dept": "epicerie" }
+    ],
+    "steps": [
+      "Porte à ébullition une casserole d'eau avec le cube de bouillon. Verse le riz et fais-le cuire 12 min, puis égoutte-le.",
+      "Pendant ce temps, émince l'oignon, coupe le poivron en lanières et hache l'ail.",
+      "Coupe le poulet en morceaux de 2 cm. Sale et poivre.",
+      "Fais chauffer l'huile d'olive dans une sauteuse à feu vif. Fais dorer le poulet 4 à 5 min, puis réserve-le dans une assiette.",
+      "Dans la même sauteuse, fais revenir l'oignon, le poivron et l'ail 5 min à feu moyen. Ajoute le paprika et le concentré de tomates, remue 1 min.",
+      "Remets le poulet, ajoute la crème fraîche et un demi-verre d'eau. Laisse mijoter 5 min à feu doux. Sers avec le riz."
+    ]
+  },
+  {
+    "title": "Gratin dauphinois de Mamie",
+    "category": "perso",
+    "servings": 4,
+    "prepMin": 20,
+    "cookMin": 75,
+    "notes": "La vraie recette de famille : sans fromage, comme le veut la tradition !",
+    "ingredients": [
+      { "name": "Pomme de terre", "qty": 1.2, "unit": "kg", "dept": "fruits-legumes" },
+      { "name": "Crème liquide", "qty": 40, "unit": "cl", "dept": "cremerie" },
+      { "name": "Lait entier", "qty": 25, "unit": "cl", "dept": "cremerie" },
+      { "name": "Ail", "qty": 2, "unit": "gousse", "dept": "fruits-legumes" },
+      { "name": "Beurre", "qty": 20, "unit": "g", "dept": "cremerie" },
+      { "name": "Noix de muscade", "qty": 1, "unit": "pincée", "dept": "epicerie" },
+      { "name": "Sel", "qty": null, "unit": null, "dept": "epicerie" },
+      { "name": "Poivre", "qty": null, "unit": null, "dept": "epicerie" }
+    ],
+    "steps": [
+      "Préchauffe le four à 160 °C. Épluche les pommes de terre et coupe-les en fines rondelles (3 mm), sans les rincer : l'amidon lie le gratin.",
+      "Frotte un plat à gratin avec une gousse d'ail coupée en deux, puis beurre-le généreusement.",
+      "Dans une casserole, fais chauffer le lait et la crème avec l'ail écrasé, la muscade, du sel et du poivre.",
+      "Range les rondelles de pommes de terre en couches dans le plat, puis verse le mélange chaud dessus.",
+      "Enfourne 1 h 15. Le dessus doit être bien doré et la pointe d'un couteau doit s'enfoncer sans résistance. Laisse reposer 10 min avant de servir."
+    ]
+  },
+  {
+    "title": "Bo bun comme au restaurant",
+    "category": "resto",
+    "servings": 2,
+    "prepMin": 25,
+    "cookMin": 10,
+    "notes": "Reproduction du bo bun de notre petit vietnamien préféré",
+    "ingredients": [
+      { "name": "Vermicelles de riz", "qty": 200, "unit": "g", "dept": "epicerie" },
+      { "name": "Rumsteck", "qty": 300, "unit": "g", "dept": "boucherie" },
+      { "name": "Carotte", "qty": 1, "unit": "pièce", "dept": "fruits-legumes" },
+      { "name": "Concombre", "qty": 0.5, "unit": "pièce", "dept": "fruits-legumes" },
+      { "name": "Salade", "qty": 0.5, "unit": "pièce", "dept": "fruits-legumes" },
+      { "name": "Menthe", "qty": 0.5, "unit": "botte", "dept": "fruits-legumes" },
+      { "name": "Coriandre", "qty": 0.5, "unit": "botte", "dept": "fruits-legumes" },
+      { "name": "Cacahuètes", "qty": 40, "unit": "g", "dept": "epicerie" },
+      { "name": "Nems", "qty": 4, "unit": "pièce", "dept": "surgeles" },
+      { "name": "Nuoc-mâm", "qty": 4, "unit": "c. à soupe", "dept": "epicerie" },
+      { "name": "Sucre", "qty": 2, "unit": "c. à soupe", "dept": "epicerie-sucree" },
+      { "name": "Citron vert", "qty": 1, "unit": "pièce", "dept": "fruits-legumes" },
+      { "name": "Ail", "qty": 1, "unit": "gousse", "dept": "fruits-legumes" }
+    ],
+    "steps": [
+      "Prépare la sauce : mélange le nuoc-mâm, le sucre, le jus du citron vert, l'ail haché et 6 c. à soupe d'eau. Réserve.",
+      "Fais tremper les vermicelles de riz dans de l'eau bouillante 4 min, égoutte et rince à l'eau froide.",
+      "Râpe la carotte, coupe le concombre en bâtonnets, cisèle la salade, effeuille la menthe et la coriandre.",
+      "Fais réchauffer les nems au four 10 min à 180 °C, puis coupe-les en deux.",
+      "Émince le bœuf et saisis-le 2 min à feu très vif avec un peu d'huile.",
+      "Monte les bols : vermicelles, salade et crudités, bœuf, nems, herbes et cacahuètes concassées. Arrose de sauce au moment de servir."
+    ]
+  },
+  {
+    "title": "Curry de pois chiches express",
+    "category": "claude",
+    "servings": 3,
+    "prepMin": 10,
+    "cookMin": 20,
+    "notes": "Recette créée par Claude — végétarienne et prête en 30 minutes",
+    "ingredients": [
+      { "name": "Pois chiches", "qty": 1, "unit": "boîte", "dept": "epicerie" },
+      { "name": "Lait de coco", "qty": 40, "unit": "cl", "dept": "epicerie" },
+      { "name": "Tomates concassées", "qty": 1, "unit": "boîte", "dept": "epicerie" },
+      { "name": "Oignon", "qty": 1, "unit": "pièce", "dept": "fruits-legumes" },
+      { "name": "Ail", "qty": 2, "unit": "gousse", "dept": "fruits-legumes" },
+      { "name": "Gingembre", "qty": 20, "unit": "g", "dept": "fruits-legumes" },
+      { "name": "Curry en poudre", "qty": 1, "unit": "c. à soupe", "dept": "epicerie" },
+      { "name": "Épinard frais", "qty": 200, "unit": "g", "dept": "fruits-legumes" },
+      { "name": "Riz basmati", "qty": 180, "unit": "g", "dept": "epicerie" },
+      { "name": "Huile de tournesol", "qty": 1, "unit": "c. à soupe", "dept": "epicerie" },
+      { "name": "Coriandre", "qty": 0.5, "unit": "botte", "dept": "fruits-legumes" }
+    ],
+    "steps": [
+      "Lance la cuisson du riz basmati selon les indications du paquet.",
+      "Émince l'oignon, hache l'ail et râpe le gingembre. Fais-les revenir 3 min dans l'huile à feu moyen.",
+      "Ajoute le curry, remue 30 secondes, puis verse les tomates concassées et le lait de coco. Laisse mijoter 5 min.",
+      "Ajoute les pois chiches égouttés et rincés. Laisse mijoter 10 min à feu doux.",
+      "Incorpore les épinards jusqu'à ce qu'ils tombent, rectifie l'assaisonnement. Sers sur le riz, parsemé de coriandre."
+    ]
+  }
+]
