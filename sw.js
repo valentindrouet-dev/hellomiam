@@ -2,7 +2,7 @@
 // Tous les chemins sont relatifs pour marcher sous GitHub Pages, où le site
 // est servi depuis un sous-dossier (/hellomiam/).
 
-const CACHE = 'hellomiam-v1'
+const CACHE = 'hellomiam-v2'
 const ASSETS = [
   './',
   './index.html',
@@ -16,6 +16,9 @@ const ASSETS = [
   './lib/aggregate.js',
   './lib/pricing.js',
   './lib/validate.js',
+  './lib/tags.js',
+  './lib/adjust.js',
+  './lib/timers.js',
   './lib/claudePrompts.js',
   './lib/store.js',
   './lib/seed.js',

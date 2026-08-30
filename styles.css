@@ -3,17 +3,20 @@
    ———————————————————————————————————————————————— */
 
 :root {
-  --bg: #faf6ef;
-  --bg-deep: #f1eadd;
+  /* Fond crème très légèrement verdi : le vert porte toute l'identité,
+     le corail ne sert plus que d'accent (cuisiner, prix, alertes). */
+  --bg: #f5f8f0;
+  --bg-deep: #e7efe0;
   --surface: #ffffff;
-  --ink: #37322d;
-  --muted: #8d8378;
-  --line: #ede4d7;
+  --ink: #2b3730;
+  --muted: #7b877a;
+  --line: #dde8d6;
 
   --sage: #4e9b72;
-  --sage-deep: #3d7e5b;
-  --sage-soft: #dff0e5;
-  --sage-ink: #2c6647;
+  --sage-deep: #3a7b57;
+  --sage-soft: #dcefe2;
+  --sage-ink: #276046;
+  --sage-tint: #eef6ee;
 
   --coral: #e8825e;
   --coral-soft: #fbe4d8;
@@ -30,9 +33,10 @@
   --danger: #c75048;
   --danger-soft: #f9e0de;
 
-  --shadow: 0 2px 12px rgba(96, 74, 42, 0.08);
+  --shadow: 0 2px 12px rgba(46, 74, 52, 0.08);
   --radius: 16px;
   --tabbar-h: 64px;
+  --timer-h: 0px;   /* hauteur réelle de la barre de chronomètres, posée par app.js */
 
   color-scheme: light;
 }
@@ -65,7 +69,7 @@ body {
 }
 
 .screen {
-  padding: 12px 16px calc(var(--tabbar-h) + 28px + env(safe-area-inset-bottom));
+  padding: 12px 16px calc(var(--tabbar-h) + var(--timer-h) + 28px + env(safe-area-inset-bottom));
   animation: fade 0.18s ease;
 }
 
@@ -90,7 +94,20 @@ h1, h2, h3 { margin: 0; }
   font-weight: 800;
   letter-spacing: -0.02em;
   flex: 1;
+  color: var(--sage-ink);
 }
+
+.app::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 190px;
+  background: linear-gradient(180deg, var(--sage-soft) 0%, rgba(220, 239, 226, 0) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.screen, .header, .back-header { position: relative; z-index: 1; }
 
 .header .logo { font-size: 24px; }
 
@@ -180,7 +197,7 @@ button {
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--muted);
+  color: var(--sage-ink);
   margin: 22px 0 10px;
   display: flex;
   align-items: center;
@@ -200,10 +217,13 @@ button {
   background: var(--surface);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  border-left: 4px solid var(--sage-soft);
   padding: 12px;
   width: 100%;
   text-align: left;
 }
+
+.recipe-card:active { border-left-color: var(--sage); }
 
 .recipe-card:active { transform: scale(0.99); }
 
@@ -403,8 +423,8 @@ textarea { resize: vertical; min-height: 90px; }
   width: 30px;
   height: 30px;
   border-radius: 10px;
-  background: var(--coral-soft);
-  color: var(--coral-ink);
+  background: var(--sage-soft);
+  color: var(--sage-ink);
   font-weight: 800;
   font-size: 15px;
   display: flex;
@@ -412,62 +432,6 @@ textarea { resize: vertical; min-height: 90px; }
   justify-content: center;
   flex-shrink: 0;
   margin-top: 1px;
-}
-
-/* ——— Mode cuisine ——— */
-
-.cookmode {
-  position: fixed;
-  inset: 0;
-  background: var(--bg);
-  z-index: 60;
-  display: flex;
-  flex-direction: column;
-  max-width: 540px;
-  margin: 0 auto;
-}
-
-.cookmode .cook-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: calc(14px + env(safe-area-inset-top)) 18px 10px;
-}
-
-.cookmode .cook-title { font-weight: 800; font-size: 16px; flex: 1; color: var(--muted); }
-
-.cook-progress { display: flex; gap: 6px; padding: 0 18px 6px; }
-.cook-progress i {
-  flex: 1;
-  height: 5px;
-  border-radius: 3px;
-  background: var(--line);
-}
-.cook-progress i.done { background: var(--sage); }
-
-.cook-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 10px 26px 20px;
-  overflow-y: auto;
-}
-
-.cook-step-label { font-size: 15px; font-weight: 800; color: var(--coral); margin-bottom: 14px; }
-.cook-text { font-size: 24px; line-height: 1.5; font-weight: 600; }
-
-.cook-actions {
-  display: flex;
-  gap: 12px;
-  padding: 12px 18px calc(18px + env(safe-area-inset-bottom));
-}
-
-.cook-ingredients {
-  border-top: 1.5px solid var(--line);
-  padding: 12px 18px;
-  max-height: 38dvh;
-  overflow-y: auto;
 }
 
 /* ——— Courses ——— */
@@ -587,7 +551,7 @@ textarea { resize: vertical; min-height: 90px; }
   right: 0;
   margin: 0 auto;
   max-width: 540px;
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(247, 251, 245, 0.95);
   backdrop-filter: blur(12px);
   border-top: 1.5px solid var(--line);
   display: flex;
@@ -609,6 +573,7 @@ textarea { resize: vertical; min-height: 90px; }
 }
 
 .tabbar button.active { color: var(--sage-deep); }
+.tabbar button.active svg { stroke-width: 2.3; }
 .tabbar button svg { width: 25px; height: 25px; }
 .tabbar .tab-badge {
   position: absolute;
@@ -790,3 +755,335 @@ details.faq p { margin: 10px 0 0; font-size: 14.5px; color: var(--muted); font-w
 }
 
 .sheet-head h2 { margin: 0; }
+
+/* ——— Mode cuisine : les étapes à la suite ——— */
+
+.cookmode {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+.cook-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: calc(12px + env(safe-area-inset-top)) 16px 8px;
+  background: var(--sage-soft);
+}
+
+.cook-title {
+  font-weight: 800;
+  font-size: 16px;
+  flex: 1;
+  color: var(--sage-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cook-count {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--sage-ink);
+  background: rgba(255, 255, 255, 0.7);
+  padding: 3px 10px;
+  border-radius: 99px;
+}
+
+.cook-progress {
+  display: flex;
+  gap: 4px;
+  padding: 0 16px 10px;
+  background: var(--sage-soft);
+}
+
+.cook-progress i {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.65);
+  transition: background 0.2s ease;
+}
+
+.cook-progress i.done { background: var(--sage); }
+
+.cook-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px calc(30px + var(--timer-h) + env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling: touch;
+}
+
+.cook-ing-fold {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.cook-ing-fold summary {
+  cursor: pointer;
+  font-weight: 750;
+  font-size: 15.5px;
+  color: var(--sage-ink);
+  list-style: none;
+}
+
+.cook-ing-fold summary::-webkit-details-marker { display: none; }
+.cook-ing-fold summary::after { content: ' ›'; color: var(--muted); }
+.cook-ing-fold[open] summary::after { content: ' ⌄'; }
+
+.cook-step {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border-left: 4px solid transparent;
+  padding: 14px;
+  margin-bottom: 12px;
+  transition: opacity 0.2s ease, border-color 0.2s ease;
+}
+
+/* L'étape en cours saute aux yeux ; les autres restent lisibles. */
+.cook-step.current {
+  border-left-color: var(--sage);
+  box-shadow: 0 4px 18px rgba(46, 110, 70, 0.16);
+}
+
+.cook-step.done { opacity: 0.55; }
+.cook-step.done .cook-step-text { text-decoration: line-through; }
+
+.cook-step-check {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: var(--sage-soft);
+  color: var(--sage-ink);
+  font-size: 17px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cook-step.done .cook-step-check { background: var(--sage); color: #fff; }
+
+.cook-step-text {
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 550;
+}
+
+.cook-step.current .cook-step-text { font-size: 20px; font-weight: 650; }
+
+.cook-timers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.timer-chip {
+  background: var(--coral-soft);
+  color: var(--coral-ink);
+  border-radius: 99px;
+  padding: 7px 14px;
+  font-size: 14.5px;
+  font-weight: 750;
+}
+
+.timer-chip.ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 1.5px dashed var(--line);
+}
+
+.timer-chip.big { padding: 10px 16px; font-size: 15px; }
+
+.cook-end { padding: 8px 0 20px; text-align: center; }
+
+/* ——— Chronomètres en cours ——— */
+
+.timer-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  margin: 0 auto;
+  max-width: 540px;
+  /* Au-dessus du mode cuisine plein écran (60) : c'est justement là que les
+     minuteurs doivent rester sous les yeux. Sous les feuilles modales (70). */
+  z-index: 65;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--line);
+  border-top: 1.5px solid var(--line);
+}
+
+.timer-bar.no-tabbar { bottom: env(safe-area-inset-bottom); }
+
+.timer-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--sage-ink);
+  color: #fff;
+  padding: 9px 14px;
+}
+
+.timer-item.over {
+  background: var(--coral);
+  animation: pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.18); }
+}
+
+.timer-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  opacity: 0.85;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timer-time {
+  font-size: 21px;
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.timer-act {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13.5px;
+  font-weight: 750;
+  flex-shrink: 0;
+}
+
+.timer-act.stop { padding: 8px 11px; }
+
+/* ——— Étiquettes ——— */
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 12px;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 99px;
+  background: var(--sage-tint);
+  color: var(--sage-ink);
+  border: 1.5px solid transparent;
+}
+
+.tag.on { background: var(--sage-soft); border-color: var(--sage); }
+.tag.off { background: transparent; color: var(--muted); border-color: var(--line); text-decoration: line-through; }
+.tag.add { background: transparent; border: 1.5px dashed var(--line); color: var(--muted); }
+.tag.mini { font-size: 11.5px; padding: 3px 8px; }
+
+.card-tags { margin-top: 6px; gap: 5px; }
+
+.badge.sub { background: var(--sage-tint); color: var(--sage-ink); }
+
+.active-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 2px;
+}
+
+.count-line {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  margin: 10px 0;
+}
+
+.sub-chips { margin-top: -2px; }
+
+.chip.small { padding: 7px 13px; font-size: 13.5px; }
+
+.chip-count {
+  background: rgba(0, 0, 0, 0.08);
+  border-radius: 99px;
+  padding: 0 6px;
+  font-size: 11.5px;
+  margin-left: 3px;
+}
+
+.chip.active .chip-count { background: rgba(255, 255, 255, 0.25); }
+
+/* ——— Ajustements d'ingrédients ——— */
+
+.link-btn {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--sage-deep);
+  text-transform: none;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+
+.swap-note {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--lavande-ink);
+  margin-left: 6px;
+}
+
+.swap-note.block { display: block; margin: 4px 0 0; }
+
+.removed-note {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  padding: 10px 0 2px;
+  font-style: italic;
+}
+
+.adjust-row.removed { opacity: 0.6; }
+.adjust-row.removed .adjust-name { text-decoration: line-through; }
+.adjust-row.replaced { border-left: 4px solid var(--lavande); }
+.adjust-name { font-weight: 750; font-size: 16px; }
+
+.muted-card { color: var(--muted); font-weight: 600; }
+
+/* ——— Écran de gestion ——— */
+
+.manage-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 11px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.manage-row:last-child { border-bottom: none; }
+.manage-name { font-weight: 700; font-size: 15.5px; }

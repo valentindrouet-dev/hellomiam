@@ -14,7 +14,11 @@ serveur — elle tourne telle quelle sur GitHub Pages.
 
 - 📖 **Recettes** en 4 catégories : Hello Fresh, Personnelles, Restaurants, Claude — recherche par plat ou par ingrédient
 - 👨‍👩‍👧 **Portions adultes + enfants** : un enfant compte pour ⅔ d'un adulte, toutes les quantités se recalculent en direct
-- 🍳 **Mode cuisine** plein écran : une étape à la fois en gros texte, l'écran reste allumé, on avance au doigt (balayage ou gros boutons)
+- 🍳 **Mode cuisine** plein écran : toutes les étapes à la suite en gros texte, l'étape en cours mise en avant, coche au fur et à mesure, l'écran reste allumé
+- ⏱️ **Chronomètres parallèles** : chaque durée écrite dans une étape (« 12 min », « 1 h 15 ») devient un bouton ; plusieurs minuteurs tournent en même temps, restent visibles partout dans l'appli, survivent à un rechargement et sonnent avec vibration
+- 🚫 **Ajuster les ingrédients** : retirer ce qu'on n'aime pas ou le remplacer, avant de cuisiner comme avant les courses — réversible, et répercuté sur la liste de courses
+- 📝 **Notes** éditables sur chaque recette (astuce, variante, qui a aimé)
+- 📂 **Sous-catégories** libres (Restaurants › *Le Petit Vietnamien*) et 🏷️ **étiquettes** déduites automatiquement (végétarien, poisson, plancha, four, rapide…) — toutes renommables, supprimables, et masquables si l'automatisme se trompe
 - 🛒 **Courses intelligentes** : plusieurs recettes fusionnées en une liste unique (300 g + 0,5 kg → 800 g, 2 c. à soupe + 5 cl → 80 ml), regroupée par rayon
 - 💶 **Prix et quantités réelles** : ce qu'il faut vraiment acheter (1 paquet de 1 kg pour 800 g de farine, 2 boîtes de 6 œufs pour 8 œufs) et le total estimé, sur ~160 prix Carrefour indicatifs corrigeables dans l'appli
 - 📷 **Scanner une recette** : l'appli prépare le prompt, Claude lit la photo, on recolle sa réponse
@@ -68,6 +72,9 @@ jamais écrit dans ce dépôt public**.
 | `styles.css` | Tout le design (pastel clair) |
 | `app.js` | Écrans, navigation, interactions |
 | `lib/store.js` | Données : mode local (localStorage) ou base commune (Supabase) |
+| `lib/timers.js` | Détection des durées dans les étapes + minuteurs parallèles |
+| `lib/tags.js` | Étiquettes automatiques et manuelles |
+| `lib/adjust.js` | Ingrédients retirés ou remplacés |
 | `lib/seed.js` | Recettes d'exemple + base de prix Carrefour |
 | `lib/portions.js` | Facteur adultes/enfants (⅔) et mise à l'échelle |
 | `lib/units.js` | Unités, conversions, arrondis « cuisine » |
@@ -85,7 +92,7 @@ Toute la logique de calcul est testée (portions, conversions, fusion des
 listes, estimation des prix, magasin de données) :
 
 ```bash
-npm test    # 41 tests, node --test, aucune dépendance
+npm test    # 70 tests, node --test, aucune dépendance
 ```
 
 ## Format d'import (celui qu'on apprend à Claude)
@@ -113,6 +120,8 @@ npm test    # 41 tests, node --test, aucune dépendance
 - `category` : `hellofresh` · `perso` · `resto` · `claude`
 - `unit` : `g` `kg` `ml` `cl` `l` `pièce` `c. à soupe` `c. à café` `gousse` `pincée` `botte` `sachet` `tranche` `boîte` `pot` `cube` — ou `null`
 - `dept` : `fruits-legumes` `boucherie` `poissonnerie` `cremerie` `epicerie` `epicerie-sucree` `boulangerie` `surgeles` `boissons` `autres`
+- `sub` (facultatif) : sous-catégorie libre, par exemple `"Le Petit Vietnamien"`
+- `tags` (facultatif) : étiquettes ajoutées à la main — les automatiques se calculent toutes seules
 
 Le prompt complet est copiable depuis l'appli : **Ajouter → Scanner une
 recette** ou **Demander à Claude**.
@@ -124,9 +133,16 @@ référence réalistes, affichés comme **estimations**. Un `~` signale une
 estimation approximative (unités non comparables, « selon goût », poids moyen
 d'une pièce). Chaque prix se corrige en deux tapes depuis la liste de courses.
 
+## Mettre à jour une base commune déjà en place
+
+Les sous-catégories, étiquettes et ajustements ont ajouté des colonnes. Si la
+base Supabase a été créée avant, il suffit de recoller le script SQL de
+l'appli (**Ajouter → Base commune → étape 1**) : il ne recrée rien d'existant
+et ajoute seulement ce qui manque.
+
 ## Pistes d'amélioration
 
 - Photos stockées dans Supabase Storage plutôt qu'en data-URL
 - Planificateur de menus de la semaine
-- Minuteurs intégrés au mode cuisine
 - Import direct depuis une URL de recette
+- Notifications système quand un minuteur sonne appli fermée
