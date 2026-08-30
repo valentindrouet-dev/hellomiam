@@ -9,12 +9,15 @@ import { formatQty, formatQtyUnit } from './lib/units.js'
 import { portionsFactor, scaleIngredient, equivalentServings } from './lib/portions.js'
 import { aggregateIngredients, extraToLine } from './lib/aggregate.js'
 import { priceLines, formatPrice } from './lib/pricing.js'
-import { validateRecipe, parseImportText } from './lib/validate.js'
+import { validateRecipe, parseImportText, cleanPhoto } from './lib/validate.js'
 import { effectiveRecipe, effectiveIngredients, adjustmentCount, setSwap, clearSwap, swapKey } from './lib/adjust.js'
 import { effectiveTags, autoTags, allTags, cleanTag, tagEmoji } from './lib/tags.js'
 import { Timers, parseDurations, formatRemaining, formatDuration } from './lib/timers.js'
+import { APP_VERSION } from './lib/version.js'
 import { buildScanPrompt, buildCreatePrompt, copyText, sharePrompt, CLAUDE_URL } from './lib/claudePrompts.js'
 import { Store, loadHousehold, saveHousehold, SUPABASE_SQL, loadRemoteConfig } from './lib/store.js'
+
+const LS_VIEW = 'hellomiam.view.v1'
 
 const store = new Store()
 const timers = new Timers()
@@ -151,6 +154,13 @@ function backHeader(title, backPath) {
 
 const ui = {
   query: '',
+  view: (() => {
+    try {
+      return localStorage.getItem(LS_VIEW) === 'grid' ? 'grid' : 'list'
+    } catch {
+      return 'list'
+    }
+  })(),
   cat: 'toutes',
   sub: null,            // sous-catégorie sélectionnée (« Chez Marcel »)
   tag: null,            // filtre par étiquette
@@ -190,20 +200,65 @@ function matchesFilters(r) {
   return q.split(' ').every(w => hay.includes(w))
 }
 
+// Vignette d'une recette : la photo si elle charge, sinon l'emoji de sa
+// catégorie. Un lien mort ne doit jamais laisser une image cassée.
+function thumbHtml(recipe, className) {
+  const info = categoryInfo(recipe.category)
+  if (!recipe.photo) {
+    return `<span class="${className}" style="background:${CAT_SOFT[info.id]}">${info.emoji}</span>`
+  }
+  return `<img class="${className}" src="${esc(recipe.photo)}" alt="" loading="lazy" decoding="async"
+               referrerpolicy="no-referrer"
+               data-fallback="${info.emoji}" data-fallback-bg="${CAT_SOFT[info.id]}">`
+}
+
+// Remplace après coup les images qui n'ont pas pu charger (lien cassé,
+// hors-ligne, site qui refuse le partage) par la pastille de catégorie.
+function wireImageFallbacks(root = document) {
+  for (const img of root.querySelectorAll('img[data-fallback]')) {
+    const swap = () => {
+      const span = document.createElement('span')
+      span.className = img.className
+      span.textContent = img.dataset.fallback || '🍲'
+      span.title = 'Image indisponible'
+      const bg = img.dataset.fallbackBg || 'var(--sage-soft)'
+      if (img.className) span.style.background = bg
+      else if (img.parentElement) img.parentElement.style.background = bg
+      img.replaceWith(span)
+    }
+    if (img.complete && img.naturalWidth === 0) swap()
+    else img.addEventListener('error', swap, { once: true })
+  }
+}
+
 function renderRecipes() {
   const list = store.state.recipes.filter(matchesFilters)
   const subs = subcategoriesOf(ui.cat)
   const filtering = ui.query || ui.cat !== 'toutes' || ui.sub || ui.tag
+  const grid = ui.view === 'grid'
 
   const cards = list.map(r => {
     const info = categoryInfo(r.category)
     const time = totalTime(r)
-    const tags = effectiveTags(r).slice(0, 3)
+    const tags = effectiveTags(r).slice(0, grid ? 2 : 3)
+
+    if (grid) {
+      return `
+        <button class="grid-card" data-act="open-recipe" data-id="${esc(r.id)}">
+          ${thumbHtml(r, 'grid-thumb')}
+          <span class="grid-body">
+            <span class="grid-title">${esc(r.title)}</span>
+            <span class="grid-meta">
+              ${time ? `⏱ ${time} · ` : ''}👤 ${r.servings}
+            </span>
+            ${tags.length ? `<span class="card-tags">${tags.map(t => `<span class="tag mini">${tagEmoji(t)} ${esc(t)}</span>`).join('')}</span>` : ''}
+          </span>
+        </button>`
+    }
+
     return `
       <button class="recipe-card" data-act="open-recipe" data-id="${esc(r.id)}">
-        ${r.photo
-          ? `<img class="recipe-thumb" src="${esc(r.photo)}" alt="" loading="lazy">`
-          : `<span class="recipe-thumb" style="background:${CAT_SOFT[info.id]}">${info.emoji}</span>`}
+        ${thumbHtml(r, 'recipe-thumb')}
         <span class="grow">
           <span class="title">${esc(r.title)}</span>
           <span class="meta">
@@ -221,6 +276,11 @@ function renderRecipes() {
       <div class="header">
         <span class="logo">🍲</span>
         <h1>HelloMiam</h1>
+        <span class="version">v${APP_VERSION}</span>
+        <div class="grow"></div>
+        <button class="icon-btn" data-act="toggle-view" aria-label="${grid ? 'Afficher en liste' : 'Afficher en vignettes'}">
+          ${grid ? '☰' : '▦'}
+        </button>
         <button class="icon-btn" data-act="go" data-path="ajouter/tags" aria-label="Étiquettes">🏷️</button>
       </div>
 
@@ -255,7 +315,7 @@ function renderRecipes() {
       <div class="count-line">${list.length} recette${list.length > 1 ? 's' : ''}${filtering ? ' trouvée' + (list.length > 1 ? 's' : '') : ''}</div>
 
       ${list.length
-        ? `<div class="stack">${cards}</div>`
+        ? `<div class="${grid ? 'grid' : 'stack'}">${cards}</div>`
         : `<div class="empty">
              <div class="big">🥣</div>
              <p>${filtering ? 'Aucune recette ne correspond.' : 'La bible est vide — ajoute ta première recette !'}</p>
@@ -296,7 +356,10 @@ function renderDetail(recipe) {
   screenEl.innerHTML = `
     <div class="screen" style="padding-top:0">
       <div class="detail-hero" style="background:${recipe.photo ? 'none' : CAT_SOFT[info.id]}">
-        ${recipe.photo ? `<img src="${esc(recipe.photo)}" alt="">` : `<span>${info.emoji}</span>`}
+        ${recipe.photo
+          ? `<img src="${esc(recipe.photo)}" alt="" referrerpolicy="no-referrer"
+                  data-fallback="${info.emoji}" data-fallback-bg="${CAT_SOFT[info.id]}">`
+          : `<span>${info.emoji}</span>`}
         <div class="float-btns">
           <button class="icon-btn" data-act="go" data-path="" aria-label="Retour">←</button>
           <div class="grow"></div>
@@ -861,15 +924,28 @@ function renderForm() {
         </div>
 
         <div class="field" style="display:block">
-          <span style="display:block;margin-bottom:6px">Photo (facultatif)</span>
+          <span style="display:block;margin-bottom:6px">Photo de prévisualisation (facultatif)</span>
           <input type="file" accept="image/*" id="photo-input" hidden>
-          ${f.photo
-            ? `<div class="row">
-                 <img src="${esc(f.photo)}" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:14px">
-                 <button type="button" class="btn btn-soft btn-sm" data-act="pick-photo">Changer</button>
-                 <button type="button" class="btn btn-danger-soft btn-sm" data-act="drop-photo">Retirer</button>
-               </div>`
-            : `<button type="button" class="btn btn-soft" data-act="pick-photo">📷 Ajouter une photo</button>`}
+
+          ${f.photo ? `
+            <div class="row" style="margin-bottom:8px">
+              <img class="photo-preview" src="${esc(f.photo)}" alt="" referrerpolicy="no-referrer"
+                   data-fallback="🖼️" data-fallback-bg="var(--danger-soft)">
+              <span class="grow">
+                <span class="hint" style="display:block">${photoKindLabel(f.photo)}</span>
+                <button type="button" class="btn btn-danger-soft btn-sm" style="margin-top:6px" data-act="drop-photo">Retirer</button>
+              </span>
+            </div>` : ''}
+
+          <div class="row">
+            <input class="grow" id="photo-url" inputmode="url" placeholder="Coller un lien https://…"
+                   value="${esc(f.photo && !f.photo.startsWith('data:') ? f.photo : '')}">
+            <button type="button" class="btn btn-soft btn-sm" data-act="pick-photo" aria-label="Prendre une photo">📷</button>
+          </div>
+          <div class="hint" style="margin-top:6px">
+            Un lien ne pèse rien et se partage avec la famille ; une photo prise ici
+            marche hors-ligne mais alourdit la base.
+          </div>
         </div>
 
         <div class="section-title" style="margin:10px 0 0">🧾 Ingrédients</div>
@@ -920,6 +996,31 @@ function renderForm() {
     el.addEventListener('input', e => { f.steps[Number(e.target.dataset.step)] = e.target.value })
   })
   screenEl.querySelector('#photo-input').addEventListener('change', onPhotoPicked)
+
+  const photoUrl = screenEl.querySelector('#photo-url')
+  // On ne redessine pas à chaque frappe (le champ perdrait le focus) : le
+  // brouillon suit la saisie, l'aperçu apparaît quand on quitte le champ.
+  photoUrl.addEventListener('input', e => {
+    const value = e.target.value.trim()
+    ui.form.photo = value ? cleanPhoto(value) : null
+  })
+  photoUrl.addEventListener('change', () => {
+    const raw = photoUrl.value.trim()
+    if (raw && !cleanPhoto(raw)) toast('Lien refusé : il doit commencer par https://', 'error')
+    render()
+  })
+}
+
+function photoKindLabel(photo) {
+  if (!photo) return ''
+  if (photo.startsWith('data:')) {
+    return `Photo intégrée · ~${Math.round((photo.length * 3) / 4 / 1024)} Ko dans la base`
+  }
+  try {
+    return `Lien vers ${new URL(photo).hostname}`
+  } catch {
+    return 'Lien'
+  }
 }
 
 // Réduit la photo avant stockage : en local comme en base commune, elle est
@@ -1586,6 +1687,11 @@ function renderTabbar(active, hidden) {
 
 function render() {
   if (!booted) return
+  renderScreen()
+  wireImageFallbacks(screenEl)
+}
+
+function renderScreen() {
   const [a, b, c] = route()
 
   if (a === 'courses') {
@@ -1682,6 +1788,13 @@ document.addEventListener('click', async e => {
     return render()
   }
   if (act === 'clear-q') { ui.query = ''; return render() }
+  if (act === 'toggle-view') {
+    ui.view = ui.view === 'grid' ? 'list' : 'grid'
+    try {
+      localStorage.setItem(LS_VIEW, ui.view)
+    } catch { /* mode privé : la vue ne sera pas mémorisée */ }
+    return render()
+  }
 
   // — détail —
   if (act.startsWith('detail:')) {
@@ -1940,7 +2053,18 @@ async function boot() {
   startTimerTicker()
 
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    navigator.serviceWorker.register('sw.js').catch(() => {})
+    // La version dans l'URL renouvelle le cache à chaque publication.
+    navigator.serviceWorker.register(`sw.js?v=${APP_VERSION}`).catch(() => {})
+
+    // Quand une nouvelle version prend la main, on recharge une fois. Sans
+    // ça, la page garderait les modules déjà chargés depuis l'ancien cache
+    // et mélangerait deux versions du code — un bug très difficile à voir.
+    let reloading = false
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloading) return
+      reloading = true
+      location.reload()
+    })
   }
 }
 

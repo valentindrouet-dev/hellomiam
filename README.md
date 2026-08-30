@@ -13,6 +13,8 @@ serveur — elle tourne telle quelle sur GitHub Pages.
 ## Fonctionnalités
 
 - 📖 **Recettes** en 4 catégories : Hello Fresh, Personnelles, Restaurants, Claude — recherche par plat ou par ingrédient
+- 🖼️ **Vue vignettes ou liste**, au choix d'un bouton, mémorisée d'une fois sur l'autre
+- 🔗 **Photo de prévisualisation** : un lien https (quelques octets en base, partagé avec la famille) ou une photo prise sur le téléphone (plus lourde, mais hors-ligne). Un lien mort retombe proprement sur la pastille de la catégorie, jamais sur une image cassée
 - 👨‍👩‍👧 **Portions adultes + enfants** : un enfant compte pour ⅔ d'un adulte, toutes les quantités se recalculent en direct
 - 🍳 **Mode cuisine** plein écran : toutes les étapes à la suite en gros texte, l'étape en cours mise en avant, coche au fur et à mesure, l'écran reste allumé
 - ⏱️ **Chronomètres parallèles** : chaque durée écrite dans une étape (« 12 min », « 1 h 15 ») devient un bouton ; plusieurs minuteurs tournent en même temps, restent visibles partout dans l'appli, survivent à un rechargement et sonnent avec vibration
@@ -71,6 +73,7 @@ jamais écrit dans ce dépôt public**.
 | `index.html` | Coquille de l'app |
 | `styles.css` | Tout le design (pastel clair) |
 | `app.js` | Écrans, navigation, interactions |
+| `lib/version.js` | Numéro de version (affiché, et nom du cache hors-ligne) |
 | `lib/store.js` | Données : mode local (localStorage) ou base commune (Supabase) |
 | `lib/timers.js` | Détection des durées dans les étapes + minuteurs parallèles |
 | `lib/tags.js` | Étiquettes automatiques et manuelles |
@@ -92,7 +95,7 @@ Toute la logique de calcul est testée (portions, conversions, fusion des
 listes, estimation des prix, magasin de données) :
 
 ```bash
-npm test    # 70 tests, node --test, aucune dépendance
+npm test    # 72 tests, node --test, aucune dépendance
 ```
 
 ## Format d'import (celui qu'on apprend à Claude)
@@ -122,6 +125,7 @@ npm test    # 70 tests, node --test, aucune dépendance
 - `dept` : `fruits-legumes` `boucherie` `poissonnerie` `cremerie` `epicerie` `epicerie-sucree` `boulangerie` `surgeles` `boissons` `autres`
 - `sub` (facultatif) : sous-catégorie libre, par exemple `"Le Petit Vietnamien"`
 - `tags` (facultatif) : étiquettes ajoutées à la main — les automatiques se calculent toutes seules
+- `photo` (facultatif) : lien `https://…` vers une image, ou image intégrée en `data:image/…;base64,…`
 
 Le prompt complet est copiable depuis l'appli : **Ajouter → Scanner une
 recette** ou **Demander à Claude**.
@@ -139,6 +143,14 @@ Les sous-catégories, étiquettes et ajustements ont ajouté des colonnes. Si la
 base Supabase a été créée avant, il suffit de recoller le script SQL de
 l'appli (**Ajouter → Base commune → étape 1**) : il ne recrée rien d'existant
 et ajoute seulement ce qui manque.
+
+## Publier une nouvelle version
+
+Le numéro de version vit dans `lib/version.js`. Le changer suffit : il
+s'affiche à côté du titre, **et** il nomme le cache hors-ligne, donc les
+téléphones récupèrent la nouvelle version au lieu de servir l'ancienne. Quand
+le nouveau service worker prend la main, la page se recharge une fois toute
+seule pour éviter de mélanger deux versions du code.
 
 ## Pistes d'amélioration
 

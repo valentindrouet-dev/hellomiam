@@ -1087,3 +1087,87 @@ details.faq p { margin: 10px 0 0; font-size: 14.5px; color: var(--muted); font-w
 
 .manage-row:last-child { border-bottom: none; }
 .manage-name { font-weight: 700; font-size: 15.5px; }
+
+/* ——— Numéro de version ——— */
+
+.version {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--sage-ink);
+  background: var(--sage-soft);
+  padding: 2px 7px;
+  border-radius: 99px;
+  align-self: flex-start;
+  margin-top: 6px;
+  letter-spacing: 0.02em;
+}
+
+/* Le titre ne pousse plus les boutons : c'est l'espaceur qui le fait. */
+.header h1 { flex: 0 0 auto; }
+
+/* ——— Vue en vignettes ——— */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.grid-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 3px solid var(--sage-soft);
+}
+
+.grid-card:active { transform: scale(0.985); }
+
+.grid-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 46px;
+  background: var(--sage-soft);
+}
+
+.grid-body {
+  padding: 10px 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.grid-title {
+  font-size: 14.5px;
+  font-weight: 750;
+  line-height: 1.25;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.grid-meta { font-size: 12px; color: var(--muted); font-weight: 650; }
+
+.grid .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px; }
+
+/* ——— Aperçu de photo dans le formulaire ——— */
+
+.photo-preview {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: 14px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+}
