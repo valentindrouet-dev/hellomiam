@@ -23,7 +23,7 @@ serveur — elle tourne telle quelle sur GitHub Pages.
 - 📂 **Sous-catégories** libres (Restaurants › *Le Petit Vietnamien*) et 🏷️ **étiquettes** déduites automatiquement (végétarien, poisson, plancha, four, rapide…) — toutes renommables, supprimables, et masquables si l'automatisme se trompe
 - 🛒 **Courses intelligentes** : plusieurs recettes fusionnées en une liste unique (300 g + 0,5 kg → 800 g, 2 c. à soupe + 5 cl → 80 ml), regroupée par rayon
 - 💶 **Prix et quantités réelles** : ce qu'il faut vraiment acheter (1 paquet de 1 kg pour 800 g de farine, 2 boîtes de 6 œufs pour 8 œufs) et le total estimé, sur ~160 prix Carrefour indicatifs corrigeables dans l'appli
-- 📷 **Scanner une recette** : l'appli prépare le prompt, Claude lit la photo, on recolle sa réponse
+- 📷 **Scanner une recette** : l'appli prépare le prompt, Claude lit la photo, on recolle sa réponse. Il suffit de lui dire « c'est du HelloFresh » ou de lui donner le lien de la photo du plat pour qu'il remplisse la catégorie et l'illustration
 - ✨ **Créer avec Claude** : un mode d'emploi exportable apprend à Claude le format d'import de l'appli
 - ☁️ **Base commune optionnelle** : par défaut chaque téléphone a ses données ; en branchant une base Supabase gratuite, toute la famille partage la même bible et la même liste de courses
 - 💾 Export JSON des données en un bouton
@@ -95,7 +95,7 @@ Toute la logique de calcul est testée (portions, conversions, fusion des
 listes, estimation des prix, magasin de données) :
 
 ```bash
-npm test    # 72 tests, node --test, aucune dépendance
+npm test    # 82 tests, node --test, aucune dépendance
 ```
 
 ## Format d'import (celui qu'on apprend à Claude)
@@ -109,6 +109,8 @@ npm test    # 72 tests, node --test, aucune dépendance
       "servings": 3,
       "prepMin": 10,
       "cookMin": 20,
+      "sub": null,
+      "photo": "https://exemple.com/photo.jpg",
       "notes": "facultatif",
       "ingredients": [
         { "name": "Pois chiches", "qty": 1, "unit": "boîte", "dept": "epicerie" },
@@ -126,6 +128,12 @@ npm test    # 72 tests, node --test, aucune dépendance
 - `sub` (facultatif) : sous-catégorie libre, par exemple `"Le Petit Vietnamien"`
 - `tags` (facultatif) : étiquettes ajoutées à la main — les automatiques se calculent toutes seules
 - `photo` (facultatif) : lien `https://…` vers une image, ou image intégrée en `data:image/…;base64,…`
+
+Le prompt explique à Claude comment choisir la catégorie d'après ce qu'on lui
+dit (« c'est du HelloFresh », le nom d'un restaurant…), et de ne recopier un
+lien de photo que si on lui en fournit un — jamais d'URL inventée. Des tests
+vérifient que l'exemple contenu dans le prompt passe bien la validation de
+l'appli, pour que le prompt ne dérive jamais du code.
 
 Le prompt complet est copiable depuis l'appli : **Ajouter → Scanner une
 recette** ou **Demander à Claude**.
