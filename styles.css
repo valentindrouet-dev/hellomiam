@@ -1109,9 +1109,22 @@ details.faq p { margin: 10px 0 0; font-size: 14.5px; color: var(--muted); font-w
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
+
+.grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid.cols-3 { grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.grid.cols-4 { grid-template-columns: repeat(4, 1fr); gap: 7px; }
+
+/* Plus les vignettes rétrécissent, plus le texte et les marges se resserrent. */
+.grid.cols-3 .grid-body { padding: 8px 8px 9px; }
+.grid.cols-3 .grid-title { font-size: 13px; }
+.grid.cols-3 .grid-thumb { font-size: 34px; }
+
+.grid.cols-4 .grid-body { padding: 6px 6px 8px; }
+.grid.cols-4 .grid-title { font-size: 11.5px; -webkit-line-clamp: 3; }
+.grid.cols-4 .grid-thumb { font-size: 26px; }
+.grid.cols-4 .grid-card { border-bottom-width: 2px; border-radius: 12px; }
 
 .grid-card {
   background: var(--surface);
@@ -1171,3 +1184,64 @@ details.faq p { margin: 10px 0 0; font-size: 14.5px; color: var(--muted); font-w
   justify-content: center;
   font-size: 32px;
 }
+
+/* ——— Barre d'action du formulaire ——— */
+/* Le bouton d'enregistrement reste sous le pouce : un formulaire de recette
+   est long, et le chercher tout en bas était pénible. */
+
+.form-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(8px + env(safe-area-inset-top)) 0 10px;
+  margin: 0 -16px 6px;
+  padding-left: 16px;
+  padding-right: 16px;
+  background: var(--bg);
+  border-bottom: 1.5px solid var(--line);
+}
+
+.form-bar h1 {
+  font-size: 19px;
+  font-weight: 800;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sage-ink);
+}
+
+.form-bar .btn { flex-shrink: 0; }
+
+/* ——— Paniers mémorisés ——— */
+
+.icon-btn .pin {
+  position: absolute;
+  margin: -22px 0 0 20px;
+  background: var(--coral);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.saved-name { font-weight: 750; font-size: 16px; }
+
+.saved-titles {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--muted);
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.saved-line { font-size: 14px; font-weight: 650; padding: 2px 0; }

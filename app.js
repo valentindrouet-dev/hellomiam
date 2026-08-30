@@ -19,6 +19,12 @@ import { Store, loadHousehold, saveHousehold, SUPABASE_SQL, loadRemoteConfig } f
 
 const LS_VIEW = 'hellomiam.view.v1'
 
+// Liste, puis vignettes de plus en plus petites. Le bouton fait défiler ces
+// quatre affichages dans l'ordre.
+const VIEWS = ['list', 'g2', 'g3', 'g4']
+const VIEW_ICON = { list: '▦', g2: '▨', g3: '▩', g4: '☰' }
+const VIEW_LABEL = { list: 'Passer en vignettes', g2: 'Vignettes plus petites', g3: 'Vignettes minuscules', g4: 'Revenir à la liste' }
+
 const store = new Store()
 const timers = new Timers()
 let household = loadHousehold()
@@ -156,7 +162,10 @@ const ui = {
   query: '',
   view: (() => {
     try {
-      return localStorage.getItem(LS_VIEW) === 'grid' ? 'grid' : 'list'
+      const v = localStorage.getItem(LS_VIEW)
+      // 'grid' est l'ancienne valeur, d'avant les niveaux de zoom.
+      if (v === 'grid') return 'g2'
+      return VIEWS.includes(v) ? v : 'list'
     } catch {
       return 'list'
     }
@@ -235,7 +244,11 @@ function renderRecipes() {
   const list = store.state.recipes.filter(matchesFilters)
   const subs = subcategoriesOf(ui.cat)
   const filtering = ui.query || ui.cat !== 'toutes' || ui.sub || ui.tag
-  const grid = ui.view === 'grid'
+  const grid = ui.view !== 'list'
+  const colonnes = grid ? Number(ui.view.slice(1)) : 1
+  // Au-delà de deux colonnes, la place manque : on ne garde que l'essentiel.
+  const montrerMeta = colonnes <= 3
+  const montrerTags = colonnes <= 2
 
   const cards = list.map(r => {
     const info = categoryInfo(r.category)
@@ -248,10 +261,8 @@ function renderRecipes() {
           ${thumbHtml(r, 'grid-thumb')}
           <span class="grid-body">
             <span class="grid-title">${esc(r.title)}</span>
-            <span class="grid-meta">
-              ${time ? `⏱ ${time} · ` : ''}👤 ${r.servings}
-            </span>
-            ${tags.length ? `<span class="card-tags">${tags.map(t => `<span class="tag mini">${tagEmoji(t)} ${esc(t)}</span>`).join('')}</span>` : ''}
+            ${montrerMeta ? `<span class="grid-meta">${time ? `⏱ ${time} · ` : ''}👤 ${r.servings}</span>` : ''}
+            ${montrerTags && tags.length ? `<span class="card-tags">${tags.map(t => `<span class="tag mini">${tagEmoji(t)} ${esc(t)}</span>`).join('')}</span>` : ''}
           </span>
         </button>`
     }
@@ -278,8 +289,8 @@ function renderRecipes() {
         <h1>HelloMiam</h1>
         <span class="version">v${APP_VERSION}</span>
         <div class="grow"></div>
-        <button class="icon-btn" data-act="toggle-view" aria-label="${grid ? 'Afficher en liste' : 'Afficher en vignettes'}">
-          ${grid ? '☰' : '▦'}
+        <button class="icon-btn" data-act="toggle-view" aria-label="${VIEW_LABEL[ui.view]}" title="${VIEW_LABEL[ui.view]}">
+          ${VIEW_ICON[ui.view]}
         </button>
         <button class="icon-btn" data-act="go" data-path="ajouter/tags" aria-label="Étiquettes">🏷️</button>
       </div>
@@ -315,7 +326,7 @@ function renderRecipes() {
       <div class="count-line">${list.length} recette${list.length > 1 ? 's' : ''}${filtering ? ' trouvée' + (list.length > 1 ? 's' : '') : ''}</div>
 
       ${list.length
-        ? `<div class="${grid ? 'grid' : 'stack'}">${cards}</div>`
+        ? `<div class="${grid ? `grid cols-${colonnes}` : 'stack'}">${cards}</div>`
         : `<div class="empty">
              <div class="big">🥣</div>
              <p>${filtering ? 'Aucune recette ne correspond.' : 'La bible est vide — ajoute ta première recette !'}</p>
@@ -890,7 +901,11 @@ function renderForm() {
   const f = ui.form
   screenEl.innerHTML = `
     <div class="screen">
-      ${backHeader(f.id ? 'Modifier la recette' : 'Nouvelle recette', f.id ? `recette/${f.id}` : 'ajouter')}
+      <div class="form-bar">
+        <button class="icon-btn" data-act="go" data-path="${f.id ? `recette/${f.id}` : 'ajouter'}" aria-label="Retour">←</button>
+        <h1>${f.id ? 'Modifier' : 'Nouvelle recette'}</h1>
+        <button class="btn btn-primary btn-sm" data-act="save-recipe">${f.id ? 'Enregistrer' : 'Ajouter'}</button>
+      </div>
       <div class="stack">
         <label class="field">Titre
           <input data-bind="title" value="${esc(f.title)}" placeholder="Lasagnes de la maison">
@@ -976,9 +991,9 @@ function renderForm() {
           <textarea data-bind="notes" rows="2" placeholder="Source, astuces, variantes…">${esc(f.notes)}</textarea>
         </label>
 
-        <button class="btn btn-primary" data-act="save-recipe">
-          ${f.id ? 'Enregistrer les modifications' : 'Ajouter à la bible 📖'}
-        </button>
+        <div class="hint" style="text-align:center;padding:4px 0 8px">
+          ${f.id ? 'Enregistre avec le bouton en haut de l’écran.' : 'Ajoute la recette avec le bouton en haut de l’écran.'}
+        </div>
       </div>
     </div>`
 
@@ -1108,11 +1123,18 @@ function renderShopping() {
   if (empty) {
     screenEl.innerHTML = `
       <div class="screen">
-        <div class="header"><span class="logo">🛒</span><h1>Courses</h1></div>
+        <div class="header">
+          <span class="logo">🛒</span><h1>Courses</h1>
+          <div class="grow"></div>
+          ${savedCartsButton()}
+        </div>
         <div class="empty">
           <div class="big">🧺</div>
           <p>Choisis des recettes, la liste de courses se prépare toute seule.</p>
           <button class="btn btn-primary" style="width:auto;margin:0 auto" data-act="pick-recipes">＋ Choisir des recettes</button>
+          ${store.state.savedCarts.length
+            ? '<button class="btn btn-soft" style="width:auto;margin:10px auto 0" data-act="saved-carts">🕘 Reprendre un panier gardé</button>'
+            : ''}
         </div>
       </div>`
     return
@@ -1136,6 +1158,8 @@ function renderShopping() {
     <div class="screen">
       <div class="header">
         <span class="logo">🛒</span><h1>Courses</h1>
+        <div class="grow"></div>
+        ${savedCartsButton()}
         <button class="btn btn-ghost btn-sm" data-act="clear-cart">Vider</button>
       </div>
 
@@ -1169,6 +1193,7 @@ function renderShopping() {
           </div>
           <div class="amount">≈ ${formatPrice(priced.total)}</div>
         </div>
+        <button class="btn btn-soft" data-act="remember-cart">💾 Se souvenir de ce panier</button>
         <div class="hint" style="text-align:center">Touche un prix pour le corriger.</div>
       </div>
     </div>`
@@ -1196,6 +1221,94 @@ function shoppingLineHtml(line) {
       </div>
       ${line.extra ? `<button class="icon-btn plain" data-act="del-extra" data-id="${esc(line.id)}" aria-label="Supprimer l’article">✕</button>` : ''}
     </div>`
+}
+
+// ——— Paniers mémorisés ————————————————————————————————————————
+//
+// Garder la liste des recettes d'un jour donné, pour refaire les mêmes
+// courses ou se rappeler ce qu'on avait cuisiné cette semaine-là.
+
+function savedCartsButton() {
+  const n = store.state.savedCarts.length
+  return `<button class="icon-btn" data-act="saved-carts" aria-label="Paniers gardés">
+            🕘${n ? `<span class="pin">${n}</span>` : ''}
+          </button>`
+}
+
+function defaultCartName() {
+  const d = new Date()
+  return `Courses du ${d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`
+}
+
+function formatSavedDate(iso) {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long' })
+}
+
+function sheetRememberCart() {
+  const { cartRecipes } = cartLines()
+  if (!cartRecipes.length && !store.state.cart.extras.length) {
+    toast('Le panier est vide', 'error')
+    return
+  }
+  openSheet('Se souvenir de ce panier', `
+    <form class="stack" id="remember-form">
+      <label class="field">Nom
+        <input id="rc-name" value="${esc(defaultCartName())}">
+      </label>
+      <div class="card" style="padding:12px">
+        <div class="hint" style="margin-bottom:6px">Seront gardés :</div>
+        ${cartRecipes.map(c => `<div class="saved-line">• ${esc(c.recipe.title)} <span class="hint">(${c.adults}👤${c.children ? ` + ${c.children}🧒` : ''})</span></div>`).join('')}
+        ${store.state.cart.extras.length ? `<div class="saved-line hint">+ ${store.state.cart.extras.length} article${store.state.cart.extras.length > 1 ? 's' : ''} libre${store.state.cart.extras.length > 1 ? 's' : ''}</div>` : ''}
+      </div>
+      <button class="btn btn-primary" type="submit">Garder ce panier</button>
+    </form>`)
+
+  sheetHost.querySelector('#remember-form').addEventListener('submit', async e => {
+    e.preventDefault()
+    const name = sheetHost.querySelector('#rc-name').value
+    await run(async () => {
+      await store.saveCurrentCart(name)
+      toast('Panier gardé 💾')
+      closeSheet()
+    })
+  })
+}
+
+function sheetSavedCarts() {
+  const liste = store.state.savedCarts
+  openSheet('Paniers gardés', liste.length ? `
+    <div class="stack">
+      ${liste.map(c => {
+        const titres = c.recipes
+          .map(r => store.state.recipes.find(x => x.id === r.recipeId)?.title)
+          .filter(Boolean)
+        const perdues = c.recipes.length - titres.length
+        return `
+          <div class="card" style="padding:14px">
+            <div class="row">
+              <span class="grow">
+                <span class="saved-name">${esc(c.name)}</span>
+                <span class="hint" style="display:block">${formatSavedDate(c.savedAt)} · ${c.recipes.length} recette${c.recipes.length > 1 ? 's' : ''}</span>
+              </span>
+              <button class="icon-btn plain" data-act="rename-cart" data-id="${esc(c.id)}" aria-label="Renommer">✏️</button>
+              <button class="icon-btn plain" data-act="delete-cart" data-id="${esc(c.id)}" aria-label="Supprimer">🗑️</button>
+            </div>
+            <div class="saved-titles">${titres.map(t => esc(t)).join(' · ') || '<span class="hint">Aucune de ces recettes n’existe encore</span>'}</div>
+            ${perdues ? `<div class="hint" style="margin-top:4px">${perdues} recette${perdues > 1 ? 's' : ''} depuis supprimée${perdues > 1 ? 's' : ''}</div>` : ''}
+            <button class="btn btn-soft btn-sm" style="margin-top:10px" data-act="restore-cart" data-id="${esc(c.id)}">
+              ↩︎ Reprendre ce panier
+            </button>
+          </div>`
+      }).join('')}
+    </div>` : `
+    <div class="empty" style="padding:24px 8px">
+      <div class="big">🕘</div>
+      <p>Aucun panier gardé pour l’instant.<br>
+      Depuis la liste de courses, touche « Se souvenir de ce panier » pour
+      garder les recettes d’un jour donné.</p>
+    </div>`)
 }
 
 // ——— Feuilles : choix de recettes, article libre, prix ————————————
@@ -1789,7 +1902,7 @@ document.addEventListener('click', async e => {
   }
   if (act === 'clear-q') { ui.query = ''; return render() }
   if (act === 'toggle-view') {
-    ui.view = ui.view === 'grid' ? 'list' : 'grid'
+    ui.view = VIEWS[(VIEWS.indexOf(ui.view) + 1) % VIEWS.length]
     try {
       localStorage.setItem(LS_VIEW, ui.view)
     } catch { /* mode privé : la vue ne sera pas mémorisée */ }
@@ -1956,6 +2069,38 @@ document.addEventListener('click', async e => {
   if (act === 'clear-cart') {
     if (!confirm('Vider toute la liste de courses ?')) return
     return run(async () => { await store.clearCart(); toast('Liste vidée') })
+  }
+  if (act === 'remember-cart') return sheetRememberCart()
+  if (act === 'saved-carts') return sheetSavedCarts()
+  if (act === 'delete-cart') {
+    const cart = store.state.savedCarts.find(c => c.id === id)
+    if (!confirm(`Supprimer le panier « ${cart?.name ?? ''} » ?`)) return
+    return run(async () => {
+      await store.deleteSavedCart(id)
+      sheetSavedCarts()
+    })
+  }
+  if (act === 'rename-cart') {
+    const cart = store.state.savedCarts.find(c => c.id === id)
+    const next = prompt('Nouveau nom du panier :', cart?.name ?? '')
+    if (next == null) return
+    return run(async () => {
+      await store.renameSavedCart(id, next)
+      sheetSavedCarts()
+    })
+  }
+  if (act === 'restore-cart') {
+    const occupe = store.state.cart.recipes.length || store.state.cart.extras.length
+    if (occupe && !confirm('Remplacer la liste de courses actuelle par ce panier ?')) return
+    return run(async () => {
+      const res = await store.restoreCart(id)
+      closeSheet()
+      if (!res) return
+      toast(res.perdues
+        ? `${res.restaurees} recette${res.restaurees > 1 ? 's' : ''} reprise${res.restaurees > 1 ? 's' : ''} · ${res.perdues} introuvable${res.perdues > 1 ? 's' : ''}`
+        : 'Panier repris 🛒')
+      navigate('courses')
+    })
   }
   if (act === 'edit-price') {
     return sheetEditPrice(el.dataset.name, el.dataset.dept, el.dataset.entry)

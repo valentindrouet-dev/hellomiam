@@ -10,7 +10,7 @@
 // que sw.js ne change pas, aucune mise à jour n'est installée — et comme les
 // fichiers de l'appli sont servis depuis le cache, le téléphone reste bloqué
 // sur l'ancienne version pour toujours. Changer ce nombre débloque tout.
-const VERSION = '0.06'
+const VERSION = '0.07'
 const CACHE = `hellomiam-${VERSION}`
 const IMG_CACHE = `hellomiam-img-${VERSION}`
 const ASSETS = [

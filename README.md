@@ -13,7 +13,7 @@ serveur — elle tourne telle quelle sur GitHub Pages.
 ## Fonctionnalités
 
 - 📖 **Recettes** en 4 catégories : Hello Fresh, Personnelles, Restaurants, Claude — recherche par plat ou par ingrédient
-- 🖼️ **Vue vignettes ou liste**, au choix d'un bouton, mémorisée d'une fois sur l'autre
+- 🖼️ **Quatre affichages** au même bouton : liste, puis vignettes en 2, 3 ou 4 colonnes — le niveau choisi est mémorisé
 - 🔗 **Photo de prévisualisation** : un lien https (quelques octets en base, partagé avec la famille) ou une photo prise sur le téléphone (plus lourde, mais hors-ligne). Un lien mort retombe proprement sur la pastille de la catégorie, jamais sur une image cassée
 - 👨‍👩‍👧 **Portions adultes + enfants** : un enfant compte pour ⅔ d'un adulte, toutes les quantités se recalculent en direct
 - 🍳 **Mode cuisine** plein écran : toutes les étapes à la suite en gros texte, l'étape en cours mise en avant, coche au fur et à mesure, l'écran reste allumé
@@ -22,6 +22,7 @@ serveur — elle tourne telle quelle sur GitHub Pages.
 - 📝 **Notes** éditables sur chaque recette (astuce, variante, qui a aimé)
 - 📂 **Sous-catégories** libres (Restaurants › *Le Petit Vietnamien*) et 🏷️ **étiquettes** déduites automatiquement (végétarien, poisson, plancha, four, rapide…) — toutes renommables, supprimables, et masquables si l'automatisme se trompe
 - 🛒 **Courses intelligentes** : plusieurs recettes fusionnées en une liste unique (300 g + 0,5 kg → 800 g, 2 c. à soupe + 5 cl → 80 ml), regroupée par rayon
+- 🕘 **Paniers gardés** : mémoriser les recettes choisies un jour donné (« Courses du 30 août ») pour refaire les mêmes courses plus tard ou se rappeler ce qu'on avait cuisiné. Un panier gardé est un instantané : vider la liste ne l'efface pas
 - 💶 **Prix et quantités réelles** : ce qu'il faut vraiment acheter (1 paquet de 1 kg pour 800 g de farine, 2 boîtes de 6 œufs pour 8 œufs) et le total estimé, sur ~160 prix Carrefour indicatifs corrigeables dans l'appli
 - 📷 **Scanner une recette** : l'appli prépare le prompt, Claude lit la photo, on recolle sa réponse. Il suffit de lui dire « c'est du HelloFresh » ou de lui donner le lien de la photo du plat pour qu'il remplisse la catégorie et l'illustration
 - ✨ **Créer avec Claude** : un mode d'emploi exportable apprend à Claude le format d'import de l'appli
@@ -95,7 +96,7 @@ Toute la logique de calcul est testée (portions, conversions, fusion des
 listes, estimation des prix, magasin de données) :
 
 ```bash
-npm test    # 86 tests, node --test, aucune dépendance
+npm test    # 93 tests, node --test, aucune dépendance
 ```
 
 ## Format d'import (celui qu'on apprend à Claude)
@@ -147,10 +148,10 @@ d'une pièce). Chaque prix se corrige en deux tapes depuis la liste de courses.
 
 ## Mettre à jour une base commune déjà en place
 
-Les sous-catégories, étiquettes et ajustements ont ajouté des colonnes. Si la
-base Supabase a été créée avant, il suffit de recoller le script SQL de
-l'appli (**Ajouter → Base commune → étape 1**) : il ne recrée rien d'existant
-et ajoute seulement ce qui manque.
+Les sous-catégories, étiquettes et ajustements ont ajouté des colonnes, et les
+paniers gardés une table. Si la base Supabase a été créée avant, il suffit de
+recoller le script SQL de l'appli (**Ajouter → Base commune → étape 1**) : il
+ne recrée rien d'existant et ajoute seulement ce qui manque.
 
 ## Publier une nouvelle version
 
