@@ -1,14 +1,4 @@
-# Dependencies
 node_modules/
-
-# Builds
-client/dist/
-
-# Données locales (base SQLite + photos uploadées)
-data/
-server/data/
-
-# Divers
 *.log
 .DS_Store
 .env

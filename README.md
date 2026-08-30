@@ -1,84 +1,94 @@
-# 🍲 HelloMiam
+# HelloMiam 🍲
 
-La bible familiale des recettes de cuisine, avec listes de courses intelligentes.
-Une PWA mobile (installable sur l'écran d'accueil) + un petit serveur qui héberge
-la **base de données commune à toute la famille** : recettes, prix de référence
-et liste de courses partagée.
+La bible familiale des recettes de cuisine : recettes pas à pas, quantités
+ajustées au nombre de convives, et listes de courses intelligentes chiffrées
+sur les prix Carrefour.
+
+C'est une **PWA** (Progressive Web App) : elle s'installe sur l'écran d'accueil
+du téléphone comme une vraie app, fonctionne hors-ligne, et n'a besoin d'aucun
+serveur — elle tourne telle quelle sur GitHub Pages.
+
+👉 **[Ouvrir l'application](https://valentindrouet-dev.github.io/hellomiam/)**
 
 ## Fonctionnalités
 
-- 📖 **Recettes** classées en 4 catégories : Hello Fresh, Personnelles, Restaurants, Claude — avec recherche par plat ou ingrédient.
-- 👨‍👩‍👧 **Portions adultes + enfants** : un enfant compte pour ⅔ d'un adulte, toutes les quantités se recalculent en direct.
-- 🍳 **Mode cuisine** plein écran : une étape à la fois, gros texte, l'écran ne s'éteint pas, navigation au doigt.
-- 🛒 **Courses intelligentes** : sélectionne plusieurs recettes (chacune avec son nombre de convives), les ingrédients sont fusionnés (g + kg, cuillères + cl…), regroupés par rayon, avec les quantités réellement à acheter (paquets entiers ou vrac au poids) et un **total estimé sur des prix indicatifs Carrefour** — corrigeables dans l'appli, pour tout le monde.
-- 📷 **Scan de recettes via claude.ai** (gratuit, sans clé API) : l'appli prépare un prompt, tu le colles avec ta photo dans Claude, tu réimportes le JSON généré.
-- ✨ **Création par Claude** : un « mode d'emploi » exportable apprend à Claude le format d'import de l'appli.
-- 📡 **Hors-ligne** : les dernières recettes consultées restent lisibles sans réseau.
-- 🔐 **Code d'accès optionnel** pour protéger la base familiale.
+- 📖 **Recettes** en 4 catégories : Hello Fresh, Personnelles, Restaurants, Claude — recherche par plat ou par ingrédient
+- 👨‍👩‍👧 **Portions adultes + enfants** : un enfant compte pour ⅔ d'un adulte, toutes les quantités se recalculent en direct
+- 🍳 **Mode cuisine** plein écran : une étape à la fois en gros texte, l'écran reste allumé, on avance au doigt (balayage ou gros boutons)
+- 🛒 **Courses intelligentes** : plusieurs recettes fusionnées en une liste unique (300 g + 0,5 kg → 800 g, 2 c. à soupe + 5 cl → 80 ml), regroupée par rayon
+- 💶 **Prix et quantités réelles** : ce qu'il faut vraiment acheter (1 paquet de 1 kg pour 800 g de farine, 2 boîtes de 6 œufs pour 8 œufs) et le total estimé, sur ~160 prix Carrefour indicatifs corrigeables dans l'appli
+- 📷 **Scanner une recette** : l'appli prépare le prompt, Claude lit la photo, on recolle sa réponse
+- ✨ **Créer avec Claude** : un mode d'emploi exportable apprend à Claude le format d'import de l'appli
+- ☁️ **Base commune optionnelle** : par défaut chaque téléphone a ses données ; en branchant une base Supabase gratuite, toute la famille partage la même bible et la même liste de courses
+- 💾 Export JSON des données en un bouton
+
+## Lancer en local
+
+Aucune dépendance, aucun build :
+
+```bash
+python3 -m http.server 8000
+# puis ouvrir http://localhost:8000
+```
+
+(ou `npx serve`, ou n'importe quel serveur statique — un `file://` ne marche
+pas, les modules ES ont besoin du HTTP)
+
+## Publier sur GitHub Pages
+
+Dans le dépôt : **Settings → Pages → Source : Deploy from a branch**, branche
+`main`, dossier `/ (root)`. Une minute plus tard le site est en ligne sur
+`https://valentindrouet-dev.github.io/hellomiam/`.
+
+Sur le téléphone :
+
+- **iPhone (Safari)** : ouvrir l'URL → Partager → « Sur l'écran d'accueil »
+- **Android (Chrome)** : ouvrir l'URL → menu ⋮ → « Installer l'application »
+
+## Base de données commune (facultatif)
+
+Par défaut, les données vivent dans le `localStorage` du navigateur : parfait
+pour un usage perso, mais chaque téléphone a sa propre bible.
+
+Pour que **toute la famille partage les mêmes recettes**, l'appli sait parler à
+une base [Supabase](https://supabase.com) gratuite. Dans l'appli :
+**Ajouter → Base commune**, puis suivre les deux étapes affichées (créer le
+projet + coller le script SQL fourni, puis coller l'URL et la clé `anon`).
+À la première connexion, les recettes déjà présentes sur le téléphone sont
+envoyées dans la base si elle est vide.
+
+Les clés restent dans le `localStorage` de chaque appareil : **rien n'est
+jamais écrit dans ce dépôt public**.
 
 ## Structure
 
-```
-client/   PWA React + Vite (interface, logique portions/agrégation/prix + tests)
-server/   API Express + SQLite (recettes, prix, panier partagé, photos)
-scripts/  dev.mjs (lancement dev), gen-icons.mjs (icônes PWA)
-```
+| Fichier | Rôle |
+|---|---|
+| `index.html` | Coquille de l'app |
+| `styles.css` | Tout le design (pastel clair) |
+| `app.js` | Écrans, navigation, interactions |
+| `lib/store.js` | Données : mode local (localStorage) ou base commune (Supabase) |
+| `lib/seed.js` | Recettes d'exemple + base de prix Carrefour |
+| `lib/portions.js` | Facteur adultes/enfants (⅔) et mise à l'échelle |
+| `lib/units.js` | Unités, conversions, arrondis « cuisine » |
+| `lib/aggregate.js` | Fusion des ingrédients de plusieurs recettes |
+| `lib/pricing.js` | Correspondance produit → prix, paquets vs vrac, total |
+| `lib/normalize.js` | Normalisation des noms (accents, pluriels) |
+| `lib/validate.js` | Validation et import tolérant du JSON |
+| `lib/claudePrompts.js` | Prompts prêts à coller dans claude.ai |
+| `sw.js` | Service worker (hors-ligne) |
+| `scripts/gen-icons.mjs` | Génère les icônes PWA (`npm run icons`) |
 
-La logique métier (conversions d'unités, facteur enfants, fusion des listes,
-estimation des prix) vit dans `client/src/lib/` en modules purs, testés avec
-`node --test`, et le serveur réutilise la même validation.
+## Tests
 
-## Démarrer en local
-
-```bash
-npm install
-npm run dev        # serveur sur :3000 + client Vite sur :5173
-npm test           # tests logique métier + base de données
-```
-
-Ouvre http://localhost:5173. Au premier démarrage, la base est créée dans
-`server/data/` avec 4 recettes d'exemple et ~150 prix de référence.
-
-## Déployer (base commune en ligne)
-
-Le serveur sert aussi le client compilé : **un seul service à déployer**.
-
-### Option A — Railway / Render / Fly.io (recommandé, gratuit pour cet usage)
-
-1. Pousse ce dépôt sur GitHub, puis crée un service depuis le dépôt :
-   - **Railway** : « New Project → Deploy from GitHub repo ». Le `Dockerfile` est détecté tout seul.
-   - **Render** : « New → Web Service », environnement **Docker**.
-   - **Fly.io** : `fly launch` (le Dockerfile est utilisé).
-2. **Monte un volume persistant sur `/data`** (c'est là que vivent la base SQLite et les photos) :
-   - Railway : onglet Volumes → Mount path `/data`.
-   - Render : « Disks » → Mount path `/data`.
-   - Fly : `fly volumes create data` puis `[mounts] source="data" destination="/data"`.
-3. Variables d'environnement (facultatif) :
-   - `APP_KEY=tonCodeSecret` → l'appli demandera ce code à la première ouverture.
-4. Ouvre l'URL du service sur ton téléphone → menu du navigateur → **« Ajouter à l'écran d'accueil »**. C'est installé 🎉
-
-### Option B — Docker n'importe où (VPS, NAS, Raspberry Pi)
+Toute la logique de calcul est testée (portions, conversions, fusion des
+listes, estimation des prix, magasin de données) :
 
 ```bash
-docker build -t hellomiam .
-docker run -d --name hellomiam -p 3000:3000 -v hellomiam-data:/data \
-  -e APP_KEY=tonCodeSecret hellomiam
+npm test    # 41 tests, node --test, aucune dépendance
 ```
 
-### Sans Docker
-
-```bash
-npm ci && npm run build
-DATA_DIR=/chemin/vers/data APP_KEY=tonCodeSecret node server/src/index.js
-```
-
-| Variable   | Défaut         | Rôle                                              |
-| ---------- | -------------- | ------------------------------------------------- |
-| `PORT`     | `3000`         | Port HTTP                                         |
-| `DATA_DIR` | `server/data`  | Dossier de la base SQLite et des photos           |
-| `APP_KEY`  | *(vide)*       | Si défini : code d'accès demandé par l'appli      |
-
-## Le format d'import (celui qu'on apprend à Claude)
+## Format d'import (celui qu'on apprend à Claude)
 
 ```json
 {
@@ -104,14 +114,19 @@ DATA_DIR=/chemin/vers/data APP_KEY=tonCodeSecret node server/src/index.js
 - `unit` : `g` `kg` `ml` `cl` `l` `pièce` `c. à soupe` `c. à café` `gousse` `pincée` `botte` `sachet` `tranche` `boîte` `pot` `cube` — ou `null`
 - `dept` : `fruits-legumes` `boucherie` `poissonnerie` `cremerie` `epicerie` `epicerie-sucree` `boulangerie` `surgeles` `boissons` `autres`
 
-Le prompt complet (avec ces règles) est copiable directement depuis l'appli :
-onglet **Ajouter → Scanner une recette** ou **Demander à Claude**.
+Le prompt complet est copiable depuis l'appli : **Ajouter → Scanner une
+recette** ou **Demander à Claude**.
 
 ## À propos des prix
 
-Carrefour n'expose pas d'API publique de prix : l'appli embarque donc une base
-de ~150 prix de référence réalistes (ordres de grandeur Carrefour France),
-clairement affichés comme **estimations**. Chaque prix se corrige en deux tapes
-depuis la liste de courses, et la correction profite à toute la famille.
-Le `~` devant un prix signale une estimation approximative (unités non
-comparables, « selon goût », poids moyen d'une pièce…).
+Carrefour n'a pas d'API publique de prix : l'appli embarque ~160 prix de
+référence réalistes, affichés comme **estimations**. Un `~` signale une
+estimation approximative (unités non comparables, « selon goût », poids moyen
+d'une pièce). Chaque prix se corrige en deux tapes depuis la liste de courses.
+
+## Pistes d'amélioration
+
+- Photos stockées dans Supabase Storage plutôt qu'en data-URL
+- Planificateur de menus de la semaine
+- Minuteurs intégrés au mode cuisine
+- Import direct depuis une URL de recette

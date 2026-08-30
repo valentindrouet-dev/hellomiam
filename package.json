@@ -4,17 +4,9 @@
   "version": "1.0.0",
   "description": "HelloMiam — la bible familiale des recettes, avec courses intelligentes",
   "type": "module",
-  "workspaces": [
-    "client",
-    "server"
-  ],
   "scripts": {
-    "dev": "node scripts/dev.mjs",
-    "build": "npm run build -w client",
-    "start": "npm run start -w server",
-    "test": "node --test client/src/lib/*.test.js server/test/*.test.js"
-  },
-  "engines": {
-    "node": ">=20"
+    "start": "python3 -m http.server 8000",
+    "test": "node --test lib/*.test.js",
+    "icons": "node scripts/gen-icons.mjs"
   }
 }

@@ -6,7 +6,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'client', 'public', 'icons')
+const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'icons')
 fs.mkdirSync(OUT, { recursive: true })
 
 // --- Encodeur PNG (RGBA 8 bits) ---------------------------------------------
