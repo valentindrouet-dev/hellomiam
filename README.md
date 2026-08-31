@@ -17,6 +17,9 @@ serveur — elle tourne telle quelle sur GitHub Pages.
 - 🔗 **Photo de prévisualisation** : un lien https (quelques octets en base, partagé avec la famille) ou une photo prise sur le téléphone (plus lourde, mais hors-ligne). Un lien mort retombe proprement sur la pastille de la catégorie, jamais sur une image cassée
 - 👨‍👩‍👧 **Portions adultes + enfants** : un enfant compte pour ⅔ d'un adulte, toutes les quantités se recalculent en direct
 - 🍳 **Mode cuisine** plein écran : toutes les étapes à la suite en gros texte, l'étape en cours mise en avant, coche au fur et à mesure, l'écran reste allumé
+- 📏 **Quantités sous chaque étape** : les ingrédients cités dans une étape s'affichent avec leur dose au moment de s'en servir (« Verse le riz » → *150 g Riz*)
+- ☑️ **Cases « déjà réuni »** devant chaque ingrédient, pour sortir le placard sans rien oublier — gardées sur l'appareil, avec un compteur et un « tout décocher »
+- 🥄 **Mesures utilisables** : pas de quart de poivron (les objets comptables s'arrondissent au demi, les œufs à l'entier), et les sachets de poudre sont convertis en cuillères (1 sachet de levure ≈ 1 c. à soupe)
 - ⏱️ **Chronomètres parallèles** : chaque durée écrite dans une étape (« 12 min », « 1 h 15 ») devient un bouton ; plusieurs minuteurs tournent en même temps, restent visibles partout dans l'appli, survivent à un rechargement et sonnent avec vibration
 - 🚫 **Ajuster les ingrédients** : retirer ce qu'on n'aime pas ou le remplacer, avant de cuisiner comme avant les courses — réversible, et répercuté sur la liste de courses
 - 📝 **Notes** éditables sur chaque recette (astuce, variante, qui a aimé)
@@ -79,6 +82,8 @@ jamais écrit dans ce dépôt public**.
 | `lib/timers.js` | Détection des durées dans les étapes + minuteurs parallèles |
 | `lib/tags.js` | Étiquettes automatiques et manuelles |
 | `lib/adjust.js` | Ingrédients retirés ou remplacés |
+| `lib/measures.js` | Sachets → cuillères, ingrédients qui ne se coupent pas |
+| `lib/steps.js` | Ingrédients cités dans une étape |
 | `lib/seed.js` | Recettes d'exemple + base de prix Carrefour |
 | `lib/portions.js` | Facteur adultes/enfants (⅔) et mise à l'échelle |
 | `lib/units.js` | Unités, conversions, arrondis « cuisine » |
@@ -96,7 +101,7 @@ Toute la logique de calcul est testée (portions, conversions, fusion des
 listes, estimation des prix, magasin de données) :
 
 ```bash
-npm test    # 93 tests, node --test, aucune dépendance
+npm test    # 111 tests, node --test, aucune dépendance
 ```
 
 ## Format d'import (celui qu'on apprend à Claude)
@@ -124,7 +129,7 @@ npm test    # 93 tests, node --test, aucune dépendance
 ```
 
 - `category` : `hellofresh` · `perso` · `resto` · `claude`
-- `unit` : `g` `kg` `ml` `cl` `l` `pièce` `c. à soupe` `c. à café` `gousse` `pincée` `botte` `sachet` `tranche` `boîte` `pot` `cube` — ou `null`
+- `unit` : `g` `kg` `ml` `cl` `l` `pièce` `c. à soupe` `c. à café` `gousse` `pincée` `botte` `tranche` `boîte` `pot` `cube` `branche` — ou `null`. Pas de `sachet` dans une recette : le contenu varie d'une marque à l'autre, l'appli le convertit en cuillères (`sachet` reste valable pour les prix, puisque c'est ce qu'on achète)
 - `dept` : `fruits-legumes` `boucherie` `poissonnerie` `cremerie` `epicerie` `epicerie-sucree` `boulangerie` `surgeles` `boissons` `autres`
 - `sub` (facultatif) : sous-catégorie libre, par exemple `"Le Petit Vietnamien"`
 - `tags` (facultatif) : étiquettes ajoutées à la main — les automatiques se calculent toutes seules

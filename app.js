@@ -3,7 +3,7 @@
 // du dépôt. Toute la logique de calcul vit dans lib/ et est testée avec
 // `npm test`.
 
-import { CATEGORIES, DEPTS, UNITS, categoryInfo, deptInfo } from './lib/constants.js'
+import { CATEGORIES, DEPTS, UNITS, RECIPE_UNITS, categoryInfo, deptInfo } from './lib/constants.js'
 import { normalizeName } from './lib/normalize.js'
 import { formatQty, formatQtyUnit } from './lib/units.js'
 import { portionsFactor, scaleIngredient, equivalentServings } from './lib/portions.js'
@@ -11,6 +11,8 @@ import { aggregateIngredients, extraToLine } from './lib/aggregate.js'
 import { priceLines, formatPrice } from './lib/pricing.js'
 import { validateRecipe, parseImportText, cleanPhoto } from './lib/validate.js'
 import { effectiveRecipe, effectiveIngredients, adjustmentCount, setSwap, clearSwap, swapKey } from './lib/adjust.js'
+import { usableIngredients } from './lib/measures.js'
+import { ingredientsForStep } from './lib/steps.js'
 import { effectiveTags, autoTags, allTags, cleanTag, tagEmoji } from './lib/tags.js'
 import { Timers, parseDurations, formatRemaining, formatDuration } from './lib/timers.js'
 import { APP_VERSION } from './lib/version.js'
@@ -18,6 +20,7 @@ import { buildScanPrompt, buildCreatePrompt, copyText, sharePrompt, CLAUDE_URL }
 import { Store, loadHousehold, saveHousehold, SUPABASE_SQL, loadRemoteConfig } from './lib/store.js'
 
 const LS_VIEW = 'hellomiam.view.v1'
+const LS_GATHERED = 'hellomiam.gathered.v1'
 
 // Liste, puis vignettes de plus en plus petites. Le bouton fait défiler ces
 // quatre affichages dans l'ordre.
@@ -128,6 +131,14 @@ function peopleHtml(action, adults, children, small = false) {
     </div>`
 }
 
+// Les ingrédients d'une recette n'ont pas la même liste d'unités que les
+// prix ou les articles achetés à la volée : pas de sachet à la cuisine.
+function recipeUnitOptions(selected) {
+  return ['', ...RECIPE_UNITS].map(u =>
+    `<option value="${esc(u)}" ${u === (selected ?? '') ? 'selected' : ''}>${u === '' ? '—' : esc(u)}</option>`
+  ).join('')
+}
+
 function unitOptions(selected) {
   return ['', ...UNITS].map(u =>
     `<option value="${esc(u)}" ${u === (selected ?? '') ? 'selected' : ''}>${u === '' ? '—' : esc(u)}</option>`
@@ -177,6 +188,69 @@ const ui = {
   form: null,
   paste: { text: '', preview: null },
   scanCat: 'hellofresh',
+}
+
+// ——— Ingrédients réunis ————————————————————————————————————————
+//
+// Cocher au fur et à mesure qu'on sort les ingrédients du placard. Gardé sur
+// l'appareil : c'est le geste d'un moment, pas une information de la recette,
+// et ça n'a rien à faire dans la base de la famille.
+
+function loadGathered() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(LS_GATHERED))
+    return raw && typeof raw === 'object' ? raw : {}
+  } catch {
+    return {}
+  }
+}
+
+let gathered = loadGathered()
+
+function isGathered(recipeId, key) {
+  return (gathered[recipeId] || []).includes(key)
+}
+
+function toggleGathered(recipeId, key) {
+  const liste = gathered[recipeId] || []
+  gathered[recipeId] = liste.includes(key) ? liste.filter(k => k !== key) : [...liste, key]
+  if (!gathered[recipeId].length) delete gathered[recipeId]
+  try {
+    localStorage.setItem(LS_GATHERED, JSON.stringify(gathered))
+  } catch { /* mode privé : les coches ne survivront pas */ }
+}
+
+function clearGathered(recipeId) {
+  delete gathered[recipeId]
+  try {
+    localStorage.setItem(LS_GATHERED, JSON.stringify(gathered))
+  } catch { /* rien à faire */ }
+}
+
+// Ingrédients d'une recette prêts à l'affichage : ajustements appliqués,
+// sachets convertis en cuillères, quantités mises à l'échelle.
+function displayIngredients(recipe, factor) {
+  return usableIngredients(effectiveIngredients(recipe)).map(ing => ({
+    ...scaleIngredient(ing, factor),
+    key: swapKey(ing.name),
+  }))
+}
+
+function ingredientRowsHtml(recipe, scaled) {
+  return scaled.map(ing => {
+    const coche = isGathered(recipe.id, ing.key)
+    return `
+      <button class="ingredient-row check ${coche ? 'got' : ''}"
+              data-act="toggle-gathered" data-id="${esc(recipe.id)}" data-key="${esc(ing.key)}">
+        <span class="ing-box">${coche ? '✓' : ''}</span>
+        <span class="qty">${esc(ing.text)}</span>
+        <span class="grow">
+          ${esc(ing.name)}
+          ${ing.replacedFrom ? `<span class="swap-note">au lieu de ${esc(ing.replacedFrom)}</span>` : ''}
+          ${ing.fromSachet ? '<span class="swap-note">1 sachet</span>' : ''}
+        </span>
+      </button>`
+  }).join('')
 }
 
 function resetCook() {
@@ -358,8 +432,8 @@ function renderDetail(recipe) {
   ui.detailChildren = children
 
   const factor = portionsFactor(adults, children, recipe.servings)
-  const ingredients = effectiveIngredients(recipe)
-  const scaled = ingredients.map(ing => scaleIngredient(ing, factor))
+  const scaled = displayIngredients(recipe, factor)
+  const nbReunis = scaled.filter(i => isGathered(recipe.id, i.key)).length
   const adjusted = adjustmentCount(recipe)
   const time = totalTime(recipe)
   const tags = effectiveTags(recipe)
@@ -417,16 +491,14 @@ function renderDetail(recipe) {
         </button>
       </div>
       <div class="card">
-        ${scaled.map(ing => `
-          <div class="ingredient-row">
-            <span class="qty">${esc(ing.text)}</span>
-            <span class="grow">
-              ${esc(ing.name)}
-              ${ing.replacedFrom ? `<span class="swap-note">au lieu de ${esc(ing.replacedFrom)}</span>` : ''}
-            </span>
-          </div>`).join('')}
+        ${ingredientRowsHtml(recipe, scaled)}
         ${adjusted.removed ? `<div class="removed-note">${adjusted.removed} ingrédient${adjusted.removed > 1 ? 's' : ''} retiré${adjusted.removed > 1 ? 's' : ''}</div>` : ''}
       </div>
+      ${nbReunis ? `
+        <div class="row" style="justify-content:space-between;margin-top:8px">
+          <span class="hint">${nbReunis}/${scaled.length} réuni${nbReunis > 1 ? 's' : ''}</span>
+          <button class="link-btn" data-act="clear-gathered" data-id="${esc(recipe.id)}">tout décocher</button>
+        </div>` : ''}
 
       <div class="section-title">👩‍🍳 Étapes</div>
       <div class="card">
@@ -500,7 +572,7 @@ function sheetReplace(recipeId, originalName) {
       </label>
       <div class="row">
         <input style="width:90px" inputmode="decimal" id="s-qty" placeholder="Qté" value="${ing.qty == null ? '' : esc(String(ing.qty).replace('.', ','))}">
-        <select style="width:120px" id="s-unit">${unitOptions(ing.unit ?? '')}</select>
+        <select style="width:120px" id="s-unit">${recipeUnitOptions(ing.unit ?? '')}</select>
         <select class="grow" id="s-dept">${deptOptions(ing.dept)}</select>
       </div>
       <div class="hint">La quantité reprend celle d’origine : ajuste-la si le remplaçant se dose autrement.</div>
@@ -654,12 +726,12 @@ function releaseWakeLock() {
 // l'étape en cours est mise en avant, et chaque durée repérée dans le texte
 // donne un bouton qui lance un chronomètre.
 function renderCook(recipe) {
-  const cooked = effectiveRecipe(recipe)
   const inCart = store.state.cart.recipes.find(c => c.recipeId === recipe.id)
   const adults = inCart ? inCart.adults : household.adults
   const children = inCart ? inCart.children : household.children
   const factor = portionsFactor(adults, children, recipe.servings)
-  const scaled = cooked.ingredients.map(ing => scaleIngredient(ing, factor))
+  const scaled = displayIngredients(recipe, factor)
+  const nbReunis = scaled.filter(i => isGathered(recipe.id, i.key)).length
   const done = ui.cook.done
   const current = firstUndoneStep(recipe)
 
@@ -677,17 +749,17 @@ function renderCook(recipe) {
 
       <div class="cook-scroll" id="cook-scroll">
         <details class="cook-ing-fold" ${ui.cook.showIngredients ? 'open' : ''}>
-          <summary>🧾 Ingrédients pour ${adults} adulte${adults > 1 ? 's' : ''}${children ? ` + ${children} enfant${children > 1 ? 's' : ''}` : ''}</summary>
+          <summary>
+            🧾 Ingrédients pour ${adults} adulte${adults > 1 ? 's' : ''}${children ? ` + ${children} enfant${children > 1 ? 's' : ''}` : ''}
+            ${nbReunis ? `<span class="ing-count">${nbReunis}/${scaled.length}</span>` : ''}
+          </summary>
           <div class="card" style="margin-top:10px">
-            ${scaled.map(ing => `
-              <div class="ingredient-row">
-                <span class="qty">${esc(ing.text)}</span>
-                <span class="grow">${esc(ing.name)}</span>
-              </div>`).join('')}
+            ${ingredientRowsHtml(recipe, scaled)}
           </div>
+          ${nbReunis ? `<button class="link-btn" style="margin-top:8px" data-act="clear-gathered" data-id="${esc(recipe.id)}">tout décocher</button>` : ''}
         </details>
 
-        ${recipe.steps.map((step, i) => cookStepHtml(step, i, done.has(i), i === current, recipe.title)).join('')}
+        ${recipe.steps.map((step, i) => cookStepHtml(step, i, done.has(i), i === current, recipe.title, scaled)).join('')}
 
         <div class="cook-end">
           ${done.size === recipe.steps.length
@@ -706,8 +778,10 @@ function renderCook(recipe) {
   ui.cook.firstPaint = false
 }
 
-function cookStepHtml(step, i, isDone, isCurrent, recipeTitle) {
+function cookStepHtml(step, i, isDone, isCurrent, recipeTitle, scaled) {
   const durations = parseDurations(step)
+  // Les quantités de l'étape, sous les yeux au moment de s'en servir.
+  const utilises = ingredientsForStep(scaled, step)
   return `
     <div class="cook-step ${isDone ? 'done' : ''} ${isCurrent ? 'current' : ''}" data-i="${i}">
       <button class="cook-step-check" data-act="cook-toggle" data-i="${i}" aria-label="Étape faite">
@@ -715,6 +789,11 @@ function cookStepHtml(step, i, isDone, isCurrent, recipeTitle) {
       </button>
       <div class="grow">
         <div class="cook-step-text">${esc(step)}</div>
+        ${utilises.length ? `
+          <div class="step-ings">
+            ${utilises.map(ing => `
+              <span class="step-ing"><b>${esc(ing.text)}</b> ${esc(ing.name)}</span>`).join('')}
+          </div>` : ''}
         ${durations.length ? `
           <div class="cook-timers">
             ${durations.map(d => `
@@ -972,7 +1051,7 @@ function renderForm() {
             </div>
             <div class="row" style="margin-top:8px">
               <input style="width:76px" inputmode="decimal" data-ing="${i}" data-field="qty" value="${esc(ing.qty)}" placeholder="200">
-              <select style="width:110px" data-ing="${i}" data-field="unit">${unitOptions(ing.unit)}</select>
+              <select style="width:110px" data-ing="${i}" data-field="unit">${recipeUnitOptions(ing.unit)}</select>
               <select class="grow" data-ing="${i}" data-field="dept">${deptOptions(ing.dept)}</select>
             </div>
           </div>`).join('')}
@@ -1996,6 +2075,16 @@ document.addEventListener('click', async e => {
     ui.sub = null
     closeSheet()
     return navigate('')
+  }
+
+  // — ingrédients réunis —
+  if (act === 'toggle-gathered') {
+    toggleGathered(id, el.dataset.key)
+    return render()
+  }
+  if (act === 'clear-gathered') {
+    clearGathered(id)
+    return render()
   }
 
   // — mode cuisine —
